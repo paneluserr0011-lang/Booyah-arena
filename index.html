@@ -1692,6 +1692,13 @@
       if (state.announcement) {
         annTxt.textContent = state.announcement;
         ann.classList.remove('hidden');
+        try {
+          const seen = localStorage.getItem('booyah_last_seen_ann');
+          if (seen !== state.announcement) {
+            localStorage.setItem('booyah_last_seen_ann', state.announcement);
+            showToast('📢 ' + state.announcement);
+          }
+        } catch (e) {}
       } else {
         ann.classList.add('hidden');
       }
