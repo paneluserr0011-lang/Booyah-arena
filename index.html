@@ -15,6 +15,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
   <style>
+    html, body {
+      overscroll-behavior-y: contain;
+    }
     body {
       font-family: 'Inter', sans-serif;
       background-color: #070a12;
@@ -108,6 +111,16 @@
 
   <!-- Main Content Area -->
   <main class="max-w-3xl mx-auto px-4 pt-4">
+    <!-- 1-Tap App Install Banner -->
+    <div id="installAppBanner" class="hidden mb-3 rounded-2xl bg-gradient-to-r from-orange-500/20 to-red-600/20 border border-orange-500/40 p-3 flex items-center justify-between gap-2 animate-in">
+      <div>
+        <p class="text-xs font-extrabold text-white">&#128242; Install BooyahArena App</p>
+        <p class="text-[11px] text-slate-300">Full-screen app experience, no browser bar</p>
+      </div>
+      <button id="installAppBtn" class="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-xs font-extrabold text-white whitespace-nowrap transition active:scale-95">
+        Install Now
+      </button>
+    </div>
 
     <!-- VIEW 1: TOURNAMENTS -->
     <section id="view-tournaments" class="space-y-4">
@@ -290,13 +303,17 @@
       </div>
 
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">My Free Fire Profile (Auto-Fill)</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">My Free Fire Profile</h3>
+          <span id="ffLockBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">&#128274; Locked</span>
+        </div>
         <form id="ffProfileForm" class="space-y-2.5">
           <div class="grid grid-cols-2 gap-2">
-            <input id="profSavedUid" type="text" placeholder="Default FF UID" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500" />
-            <input id="profSavedIgn" type="text" placeholder="Default IGN" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500" />
+            <input id="profSavedUid" type="text" required placeholder="Free Fire UID" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed" />
+            <input id="profSavedIgn" type="text" required placeholder="Free Fire IGN" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed" />
           </div>
-          <button type="submit" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition">
+          <p id="ffLockHint" class="text-[11px] text-slate-400">Save your UID &amp; IGN. It locks once you join an active room until the match completes.</p>
+          <button id="ffSaveBtn" type="submit" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition disabled:opacity-50 disabled:cursor-not-allowed">
             Save Free Fire ID
           </button>
         </form>
@@ -879,7 +896,24 @@
           state.user = { uid: u.uid, name: u.displayName || 'Player', email: u.email || '' };
           unsubUserDoc = null;
           saveState();
-          attachAuthObserver();
+      
+    // 1-Tap Native App Install Prompt
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const banner = document.getElementById('installAppBanner');
+      if (banner) banner.classList.remove('hidden');
+    });
+    document.getElementById('installAppBtn').addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      document.getElementById('installAppBanner').classList.add('hidden');
+    });
+
+    attachAuthObserver();
     startFirestoreListeners();
           renderAll();
         }
@@ -1127,8 +1161,33 @@
         .reduce((sum, tx) => sum + tx.amount, 0);
       document.getElementById('profStatSpent').textContent = spent;
 
-      document.getElementById('profSavedUid').value = (state.ffProfile && state.ffProfile.uid) || '';
-      document.getElementById('profSavedIgn').value = (state.ffProfile && state.ffProfile.ign) || '';
+      const uidEl = document.getElementById('profSavedUid');
+      const ignEl = document.getElementById('profSavedIgn');
+      const saveBtn = document.getElementById('ffSaveBtn');
+      const lockBadge = document.getElementById('ffLockBadge');
+      const lockHint = document.getElementById('ffLockHint');
+
+      uidEl.value = (state.ffProfile && state.ffProfile.uid) || '';
+      ignEl.value = (state.ffProfile && state.ffProfile.ign) || '';
+
+      const activeMatch = state.joined.some(j => {
+        const tm = state.tournaments.find(x => x.id === j.tournamentId);
+        return tm && (tm.status === 'Upcoming' || tm.status === 'Ongoing');
+      });
+
+      const isSavedAndLocked = activeMatch && Boolean(uidEl.value && ignEl.value);
+      uidEl.disabled = isSavedAndLocked;
+      ignEl.disabled = isSavedAndLocked;
+      saveBtn.disabled = isSavedAndLocked;
+      if (isSavedAndLocked) {
+        lockBadge.classList.remove('hidden');
+        lockHint.textContent = 'Locked while you have an Upcoming or Ongoing match. Editable again once the match is Completed.';
+        lockHint.className = 'text-[11px] text-amber-400';
+      } else {
+        lockBadge.classList.add('hidden');
+        lockHint.textContent = 'You can edit your Free Fire ID anytime before joining an active room or after it is Completed.';
+        lockHint.className = 'text-[11px] text-slate-400';
+      }
 
       const notifBtn = document.getElementById('toggleNotifBtn');
       if (state.notifications !== false) {
@@ -1640,13 +1699,22 @@
 
     document.getElementById('ffProfileForm').addEventListener('submit', e => {
       e.preventDefault();
+      const activeMatch = state.joined.some(j => {
+        const tm = state.tournaments.find(x => x.id === j.tournamentId);
+        return tm && (tm.status === 'Upcoming' || tm.status === 'Ongoing');
+      });
+      if (activeMatch && state.ffProfile && state.ffProfile.uid) {
+        showToast('Locked until your active match is Completed.');
+        return;
+      }
       state.ffProfile = {
         uid: document.getElementById('profSavedUid').value.trim(),
         ign: document.getElementById('profSavedIgn').value.trim()
       };
       saveState();
       syncUserToFirestore();
-      showToast('Default Free Fire ID saved!');
+      renderProfileTab();
+      showToast('Free Fire ID saved!');
     });
 
     document.getElementById('toggleNotifBtn').addEventListener('click', () => {
@@ -2013,10 +2081,13 @@
         `;
         document.getElementById('joinForm').reset();
         renderSlotPicker(t);
-        if (state.ffProfile) {
-          document.getElementById('inputUid').value = state.ffProfile.uid || '';
-          document.getElementById('inputIgn').value = state.ffProfile.ign || '';
-        }
+        const jUidEl = document.getElementById('inputUid');
+        const jIgnEl = document.getElementById('inputIgn');
+        const hasSaved = Boolean(state.ffProfile && state.ffProfile.uid && state.ffProfile.ign);
+        jUidEl.value = hasSaved ? state.ffProfile.uid : '';
+        jIgnEl.value = hasSaved ? state.ffProfile.ign : '';
+        jUidEl.readOnly = hasSaved;
+        jIgnEl.readOnly = hasSaved;
         document.getElementById('joinModal').classList.remove('hidden');
       }
     });
