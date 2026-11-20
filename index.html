@@ -124,7 +124,19 @@
 
     <!-- VIEW 1: TOURNAMENTS -->
     <section id="view-tournaments" class="space-y-4">
-      <div id="categoryHome" class="space-y-4">
+          <!-- Blocked Account Banner -->
+    <div id="blockedBanner" class="hidden mb-3 rounded-2xl bg-red-950/60 border border-red-500/50 p-3.5 text-xs text-red-200 space-y-1">
+      <p class="font-extrabold text-red-400">&#128683; Account Suspended</p>
+      <p>Your account has been blocked by the Admin for violating fair-play rules. Contact <strong>7341vaibhavtyagi@gmail.com</strong> or <strong>@vb.tyagi</strong>.</p>
+    </div>
+
+    <!-- Live Admin Announcement Banner -->
+    <div id="announcementBanner" class="hidden mb-3 rounded-2xl bg-gradient-to-r from-cyan-500/15 to-blue-600/15 border border-cyan-500/30 px-3.5 py-2.5 flex items-center gap-2.5 animate-in">
+      <span class="text-base">&#128226;</span>
+      <p id="announcementText" class="text-xs font-semibold text-cyan-200"></p>
+    </div>
+
+    <div id="categoryHome" class="space-y-4">
         <div class="relative overflow-hidden rounded-2xl border border-orange-500/30 bg-gradient-to-br from-slate-900 via-[#151226] to-orange-950/40 p-4 shadow-lg shadow-orange-500/5">
           <div class="space-y-1">
             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30">
@@ -200,6 +212,7 @@
           </select>
         </div>
 
+        <input id="roomSearchInput" type="text" placeholder="Search room title or time..." class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500" />
         <div id="subOptionsBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
 
         <div class="grid grid-cols-3 gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl" id="statusTabsBar">
@@ -327,13 +340,23 @@
           </div>
           <button id="toggleNotifBtn" class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ON</button>
         </div>
-        <button id="shareAppBtn" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-800/40 transition">
+        <button id="openHowToPlayBtn" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-800/40 transition">
           <div>
-            <p class="text-xs font-bold text-white">Invite Friends / Share App</p>
-            <p class="text-[11px] text-slate-400">Share BooyahArena link with your squad</p>
+            <p class="text-xs font-bold text-white">How to Play &amp; Win Coins</p>
+            <p class="text-[11px] text-slate-400">Quick 4-step guide for new players</p>
           </div>
-          <span class="text-xs font-bold text-orange-400">Share &rarr;</span>
+          <span class="text-xs font-bold text-cyan-400">Guide &rarr;</span>
         </button>
+        <div class="px-4 py-3 space-y-1.5">
+          <button id="shareAppBtn" class="w-full flex items-center justify-between text-left hover:opacity-90 transition">
+            <div>
+              <p class="text-xs font-bold text-emerald-400">&#127873; Refer &amp; Earn &mdash; Get &#8377;20 for referring a friend</p>
+              <p class="text-[11px] text-slate-300 mt-0.5">Your Referral Code: <strong id="myReferralCode" class="font-mono text-orange-400">Sign in to view</strong></p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold whitespace-nowrap">Refer &rarr;</span>
+          </button>
+          <p class="text-[11px] text-slate-400 leading-snug"><strong class="text-slate-300">Rules:</strong> If you refer a friend and he makes his first deposit of &#8377;100, you will get &#8377;20.</p>
+        </div>
         <button id="openAdminLoginBtn" class="hidden w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-800/40 transition">
           <div>
             <p class="text-xs font-bold text-amber-400">Admin Portal (Owner Only)</p>
@@ -419,6 +442,32 @@
         </div>
         <button id="closeAdminPortal" class="text-slate-400 hover:text-white text-xl leading-none px-2">&times;</button>
       </div>
+
+      <!-- Admin Quick Stats -->
+      <div id="adminStatsGrid" class="grid grid-cols-4 gap-1.5 text-center">
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2">
+          <p class="text-[10px] text-slate-400 font-semibold">Players</p>
+          <p id="admStatPlayers" class="text-sm font-extrabold text-white">0</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2">
+          <p class="text-[10px] text-slate-400 font-semibold">Rooms</p>
+          <p id="admStatRooms" class="text-sm font-extrabold text-orange-400">0</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2">
+          <p class="text-[10px] text-slate-400 font-semibold">Deposits</p>
+          <p id="admStatDeps" class="text-sm font-extrabold text-emerald-400">0</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-2">
+          <p class="text-[10px] text-slate-400 font-semibold">Payouts</p>
+          <p id="admStatWds" class="text-sm font-extrabold text-amber-400">0</p>
+        </div>
+      </div>
+
+      <!-- Admin Live Announcement -->
+      <form id="adminAnnouncementForm" class="flex gap-1.5">
+        <input id="adminAnnouncementInput" type="text" placeholder="Broadcast notice to all players (leave empty to hide)..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500" />
+        <button type="submit" class="px-3 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-extrabold">Post</button>
+      </form>
 
       <!-- Admin Sub-Tabs -->
       <div class="grid grid-cols-5 gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl" id="adminTabsBar">
@@ -599,6 +648,7 @@
 
         <form id="emailAuthForm" class="space-y-2.5">
           <input id="emailAuthName" type="text" placeholder="Your Name (for new account)" class="hidden w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+          <input id="emailAuthRefCode" type="text" placeholder="Referral Code (Optional)" class="hidden w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
           <input id="emailAuthEmail" type="email" required placeholder="Email address" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
           <input id="emailAuthPass" type="password" required minlength="6" placeholder="Password (min 6 characters)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
           <button id="emailAuthSubmitBtn" type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:brightness-110 text-xs font-bold text-white transition active:scale-95">
@@ -835,6 +885,9 @@
       ffProfile: { uid: '', ign: '' },
       notifications: true,
       adminUpi: '9837925988-2@ybl',
+      announcement: '',
+      blocked: false,
+      roomSearch: '',
       balance: 0,
       selectedCategory: null,
       selectedMode: 'All',
@@ -941,10 +994,13 @@
 
       if (!unsubSettings) {
         unsubSettings = database.collection('settings').doc('app').onSnapshot(doc => {
-          if (doc.exists && doc.data().adminUpi) {
-            state.adminUpi = doc.data().adminUpi;
+          if (doc.exists) {
+            const d = doc.data();
+            if (d.adminUpi) state.adminUpi = d.adminUpi;
+            state.announcement = d.announcement || '';
             saveState();
             updateUpiDisplay();
+            renderAnnouncement();
           }
         }, () => {});
       }
@@ -997,6 +1053,7 @@
             state.joined = Array.isArray(d.joined) ? d.joined : [];
             state.transactions = Array.isArray(d.transactions) ? d.transactions : [];
             state.ffProfile = d.ffProfile || { uid: '', ign: '' };
+            state.blocked = Boolean(d.blocked);
             saveState();
             renderAll();
           } else {
@@ -1170,6 +1227,8 @@
       }
 
       document.getElementById('profStatMatches').textContent = state.joined.length;
+      const myCode = (state.user && state.user.uid) ? ('BA-' + state.user.uid.slice(0, 6).toUpperCase()) : 'Sign in to view';
+      document.getElementById('myReferralCode').textContent = myCode;
       document.getElementById('profStatCoins').textContent = state.balance;
       const spent = state.transactions
         .filter(tx => tx.type === 'debit' && tx.label.startsWith('Joined:'))
@@ -1235,7 +1294,9 @@
         const modeOk = state.selectedMode === 'All' || t.mode === state.selectedMode;
         const statusOk = t.status === state.selectedStatus;
         const ruleOk = state.ruleFilter === 'All' || t.rule === state.ruleFilter;
-        return catOk && modeOk && statusOk && ruleOk;
+        const q = (state.roomSearch || '').trim().toLowerCase();
+        const qOk = !q || t.title.toLowerCase().includes(q) || (t.startTime || '').toLowerCase().includes(q) || (t.mode || '').toLowerCase().includes(q);
+        return catOk && modeOk && statusOk && ruleOk && qOk;
       });
 
       if (filtered.length === 0) {
@@ -1441,6 +1502,12 @@
         }
       });
 
+      document.getElementById('admStatPlayers').textContent = (state.allUsers || []).length;
+      document.getElementById('admStatRooms').textContent = (state.tournaments || []).length;
+      document.getElementById('admStatDeps').textContent = (state.deposits || []).filter(d => d.status === 'Pending').length;
+      document.getElementById('admStatWds').textContent = (state.withdrawals || []).filter(w => w.status === 'Pending').length;
+      document.getElementById('adminAnnouncementInput').value = state.announcement || '';
+
       ['create', 'manage', 'deposits', 'payouts', 'players'].forEach(t => {
         const el = document.getElementById('admin-tab-' + t);
         if (t === activeAdminTab) el.classList.remove('hidden');
@@ -1567,15 +1634,16 @@
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
             <div class="flex justify-between items-center">
               <div>
-                <p class="text-xs font-bold text-white">${u.name || 'Player'}</p>
+                <p class="text-xs font-bold text-white">${u.name || 'Player'} ${u.blocked ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px]">BLOCKED</span>' : ''}</p>
                 <p class="text-[11px] text-slate-400">${u.email || ''} ${u.ffProfile && u.ffProfile.uid ? '&bull; UID: ' + u.ffProfile.uid : ''}</p>
               </div>
               <span class="text-xs font-extrabold text-emerald-400">&#129689; ${u.balance || 0}</span>
             </div>
-            <div class="grid grid-cols-3 gap-1.5">
+            <div class="grid grid-cols-4 gap-1.5">
               <input id="manualAmt_${u.id}" type="number" min="1" value="50" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white" />
-              <button data-addcoins="${u.id}" class="py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">+ Add Coins</button>
-              <button data-subcoins="${u.id}" class="py-1 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold">- Deduct</button>
+              <button data-addcoins="${u.id}" class="py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">+ Add</button>
+              <button data-subcoins="${u.id}" class="py-1 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold">- Sub</button>
+              <button data-toggleblock="${u.id}" class="py-1 rounded-lg ${u.blocked ? 'bg-emerald-500 text-slate-950' : 'bg-red-600 text-white'} text-[11px] font-extrabold">${u.blocked ? 'Unblock' : 'Block'}</button>
             </div>
           </div>
         `).join('');
@@ -1615,7 +1683,22 @@
       }).join('');
     }
 
+    function renderAnnouncement() {
+      const ann = document.getElementById('announcementBanner');
+      const annTxt = document.getElementById('announcementText');
+      if (state.announcement) {
+        annTxt.textContent = state.announcement;
+        ann.classList.remove('hidden');
+      } else {
+        ann.classList.add('hidden');
+      }
+      const blk = document.getElementById('blockedBanner');
+      if (state.blocked) blk.classList.remove('hidden');
+      else blk.classList.add('hidden');
+    }
+
     function renderAll() {
+      renderAnnouncement();
       renderCategoryView();
       renderAuth();
       renderProfileTab();
@@ -1710,11 +1793,13 @@
       if (isSignUpMode) {
         nameEl.classList.remove('hidden');
         nameEl.required = true;
+        document.getElementById('emailAuthRefCode').classList.remove('hidden');
         submitBtn.textContent = 'Create Account';
         toggleBtn.textContent = 'Already have an account? Sign In';
       } else {
         nameEl.classList.add('hidden');
         nameEl.required = false;
+        document.getElementById('emailAuthRefCode').classList.add('hidden');
         submitBtn.textContent = 'Sign In with Email';
         toggleBtn.textContent = 'New player? Create an Account';
       }
@@ -1731,6 +1816,21 @@
         let cred;
         if (isSignUpMode) {
           cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+          const refInput = (document.getElementById('emailAuthRefCode').value || '').trim().toUpperCase();
+          if (refInput && initFirebaseServices()) {
+            await db.collection('users').doc(cred.user.uid).set({
+              uid: cred.user.uid,
+              name: name || email.split('@')[0],
+              email,
+              balance: 0,
+              referredBy: refInput,
+              referralRewarded: false,
+              joined: [],
+              transactions: [],
+              ffProfile: { uid: '', ign: '' },
+              updatedAt: Date.now()
+            }, { merge: true }).catch(() => {});
+          }
           if (name) await cred.user.updateProfile({ displayName: name });
           await cred.user.sendEmailVerification();
           document.getElementById('emailAuthForm').reset();
@@ -1856,9 +1956,10 @@
     document.getElementById('shareAppBtn').addEventListener('click', () => {
       const shareUrl = window.location.href;
       if (navigator.share) {
+        const myCode = (state.user && state.user.uid) ? ('BA-' + state.user.uid.slice(0, 6).toUpperCase()) : '';
         navigator.share({
-          title: 'BooyahArena — Free Fire Tournaments',
-          text: 'Join Bermuda custom rooms and win Coins on BooyahArena!',
+          title: 'BooyahArena — Refer & Earn ₹20',
+          text: myCode ? `Join BooyahArena using my referral code ${myCode}!` : 'Join Bermuda custom rooms on BooyahArena!',
           url: shareUrl
         }).catch(() => {});
       } else {
@@ -1987,6 +2088,26 @@
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               });
               await uRef.update({ balance: newBal, transactions: txs }).catch(() => {});
+              if (d.amount >= 100 && ud.referredBy && !ud.referralRewarded) {
+                await uRef.update({ referralRewarded: true }).catch(() => {});
+                const refUsers = await db.collection('users').get().catch(() => null);
+                if (refUsers) {
+                  const target = refUsers.docs.find(doc => ('BA-' + doc.id.slice(0, 6).toUpperCase()) === ud.referredBy);
+                  if (target && target.id !== d.userUid) {
+                    const rd = target.data();
+                    const rBal = (rd.balance || 0) + 20;
+                    const rTxs = Array.isArray(rd.transactions) ? rd.transactions : [];
+                    rTxs.unshift({
+                      id: 'ref_' + Date.now(),
+                      label: `Referral Bonus (₹20) from ${d.playerName}`,
+                      amount: 20,
+                      type: 'credit',
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    await db.collection('users').doc(target.id).update({ balance: rBal, transactions: rTxs }).catch(() => {});
+                  }
+                }
+              }
             }
           }
           // Update Leaderboard
@@ -2124,8 +2245,48 @@
     });
 
     // Admin: Players Manual Coin Control
+
+    document.getElementById('roomSearchInput').addEventListener('input', e => {
+      state.roomSearch = e.target.value;
+      renderTournaments();
+    });
+
+    document.getElementById('adminAnnouncementForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = document.getElementById('adminAnnouncementInput').value.trim();
+      state.announcement = msg;
+      saveState();
+      renderAnnouncement();
+      if (initFirebaseServices()) {
+        await db.collection('settings').doc('app').set({ announcement: msg }, { merge: true }).catch(() => {});
+      }
+      showToast(msg ? 'Announcement posted to all players!' : 'Announcement cleared');
+    });
+
+    document.getElementById('openHowToPlayBtn').addEventListener('click', () => {
+      document.getElementById('legalModalTitle').textContent = 'How to Play & Win Coins';
+      document.getElementById('legalModalBody').innerHTML = `
+        <p><strong>Step 1 — Add Coins:</strong> Open <strong>Wallet &gt; Add Coins (UPI)</strong>, pay via QR or UPI ID, and submit your 12-digit UTR (1 Coin = &#8377;1).</p>
+        <p><strong>Step 2 — Pick a Room &amp; Slot:</strong> Choose <strong>Lone Wolf</strong>, <strong>Clash Squad</strong>, <strong>Battle Royale</strong>, or <strong>Craftland</strong>, pick an empty Team Slot, and enter your Free Fire UID &amp; IGN.</p>
+        <p><strong>Step 3 — Get Room ID &amp; Pass:</strong> Open <strong>Matches</strong> 5 minutes before match time to copy your Room ID &amp; Password, and sit in your exact app slot.</p>
+        <p><strong>Step 4 — Win &amp; Withdraw:</strong> Winning Coins are credited to your wallet. Withdraw anytime once you have at least <strong>50 Coins (&#8377;50)</strong>!</p>
+      `;
+      document.getElementById('legalModal').classList.remove('hidden');
+    });
+
     document.getElementById('adminPlayerSearch').addEventListener('input', renderAdminPortal);
     document.getElementById('adminPlayersList').addEventListener('click', async e => {
+      const blkBtn = e.target.closest('[data-toggleblock]');
+      if (blkBtn) {
+        const uid = blkBtn.dataset.toggleblock;
+        const uObj = (state.allUsers || []).find(x => x.id === uid);
+        const nextBlocked = !(uObj && uObj.blocked);
+        if (initFirebaseServices()) {
+          await db.collection('users').doc(uid).update({ blocked: nextBlocked }).catch(() => {});
+        }
+        showToast(nextBlocked ? 'User blocked!' : 'User unblocked!');
+        return;
+      }
       const addBtn = e.target.closest('[data-addcoins]');
       const subBtn = e.target.closest('[data-subcoins]');
       const btn = addBtn || subBtn;
@@ -2184,8 +2345,9 @@
         return;
       }
       if (btn.dataset.action === 'join') {
+        if (state.blocked) { showToast('Your account is suspended by Admin.'); return; }
         if (!state.user) {
-          showToast('Please sign in with Google first');
+          showToast('Please sign in first');
           document.getElementById('authModal').classList.remove('hidden');
           return;
         }
@@ -2382,6 +2544,7 @@
 
     // Wallet: Manual UPI + UTR Deposit
     document.getElementById('openPayModalBtn').addEventListener('click', () => {
+      if (state.blocked) { showToast('Account suspended.'); return; }
       if (!state.user) {
         showToast('Please sign in with Google first');
         document.getElementById('authModal').classList.remove('hidden');
@@ -2449,6 +2612,7 @@
 
     // Wallet: Withdrawals (Min 50 Coins)
     document.getElementById('openWithdrawModalBtn').addEventListener('click', () => {
+      if (state.blocked) { showToast('Account suspended.'); return; }
       if (!state.user) {
         showToast('Please sign in with Google first');
         document.getElementById('authModal').classList.remove('hidden');
