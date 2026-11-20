@@ -472,6 +472,12 @@
         <button type="submit" class="px-3 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-extrabold">Post</button>
       </form>
 
+      <!-- Admin APK Download Link (Used by Refer & Earn) -->
+      <form id="adminDownloadUrlForm" class="flex gap-1.5">
+        <input id="adminDownloadUrlInput" type="url" placeholder="APK Download Link (Google Drive / GitHub Release)..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500" />
+        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Save</button>
+      </form>
+
       <!-- Admin Sub-Tabs -->
       <div class="grid grid-cols-5 gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl" id="adminTabsBar">
         <button data-admintab="create" class="admin-tab py-2 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950">Create</button>
@@ -889,6 +895,7 @@
       notifications: true,
       adminUpi: '9837925988-2@ybl',
       announcement: '',
+      downloadUrl: 'https://paneluserr0011-lang.github.io/Booyah-arena/BooyahArena.apk',
       blocked: false,
       roomSearch: '',
       balance: 0,
@@ -1001,6 +1008,7 @@
             const d = doc.data();
             if (d.adminUpi) state.adminUpi = d.adminUpi;
             state.announcement = d.announcement || '';
+            state.downloadUrl = d.downloadUrl || DEFAULT_STATE.downloadUrl;
             saveState();
             updateUpiDisplay();
             renderAnnouncement();
@@ -1510,6 +1518,7 @@
       document.getElementById('admStatDeps').textContent = (state.deposits || []).filter(d => d.status === 'Pending').length;
       document.getElementById('admStatWds').textContent = (state.withdrawals || []).filter(w => w.status === 'Pending').length;
       document.getElementById('adminAnnouncementInput').value = state.announcement || '';
+      document.getElementById('adminDownloadUrlInput').value = state.downloadUrl || '';
 
       ['create', 'manage', 'deposits', 'payouts', 'players'].forEach(t => {
         const el = document.getElementById('admin-tab-' + t);
@@ -1971,18 +1980,19 @@
     });
 
     document.getElementById('shareAppBtn').addEventListener('click', () => {
-      const shareUrl = 'https://paneluserr0011-lang.github.io/Booyah-arena/';
+      const shareUrl = state.downloadUrl || 'https://paneluserr0011-lang.github.io/Booyah-arena/';
       const myCode = (state.user && state.user.uid) ? ('BA-' + state.user.uid.slice(0, 6).toUpperCase()) : '';
-      const inviteText = myCode
-        ? `Join BooyahArena & win Coins! Use my Referral Code: ${myCode} — ${shareUrl}`
-        : `Join BooyahArena Bermuda custom rooms! ${shareUrl}`;
+      const shareMsg = myCode
+        ? `Download BooyahArena & win Coins! Use my Referral Code: ${myCode}`
+        : 'Download BooyahArena & play Bermuda custom rooms!';
+      const fullCopy = `${shareMsg} — ${shareUrl}`;
+      copyText(fullCopy, 'Invite & Referral Code');
       if (navigator.share) {
         navigator.share({
           title: 'BooyahArena — Refer & Earn ₹20',
-          text: inviteText
-        }).catch(() => copyText(inviteText, 'Invite & Referral Code'));
-      } else {
-        copyText(inviteText, 'Invite & Referral Code');
+          text: shareMsg,
+          url: shareUrl
+        }).catch(() => {});
       }
     });
 
@@ -2268,6 +2278,18 @@
     document.getElementById('roomSearchInput').addEventListener('input', e => {
       state.roomSearch = e.target.value;
       renderTournaments();
+    });
+
+
+    document.getElementById('adminDownloadUrlForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const url = document.getElementById('adminDownloadUrlInput').value.trim();
+      state.downloadUrl = url;
+      saveState();
+      if (initFirebaseServices()) {
+        await db.collection('settings').doc('app').set({ downloadUrl: url }, { merge: true }).catch(() => {});
+      }
+      showToast('APK download link saved for Refer & Earn!');
     });
 
     document.getElementById('adminAnnouncementForm').addEventListener('submit', async e => {
