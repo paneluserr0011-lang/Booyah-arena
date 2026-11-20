@@ -267,6 +267,38 @@
       <div id="leaderboardContainer" class="space-y-2"></div>
     </section>
 
+    <!-- TAB 3.5: STREAK -->
+    <section id="tab-streak" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-xl font-bold text-white uppercase">Daily Streak</h2>
+        <span class="text-[11px] text-amber-400 font-semibold">+10 Coins / Week</span>
+      </div>
+      <div class="bg-gradient-to-br from-[#161b28] to-[#111520] border border-amber-500/30 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-white flex items-center gap-1.5">🔥 7-Day Check-In Streak</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Check in 7 days in a row to earn <span class="text-amber-400 font-bold">+10 Coins</span> every week</div>
+          </div>
+          <span id="streakBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">0 / 7 Days</span>
+        </div>
+        <div id="streakDaysGrid" class="grid grid-cols-7 gap-1.5"></div>
+        <button id="claimStreakBtn" onclick="claimDailyCheckIn()" class="w-full py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
+          Check In Today
+        </button>
+        <div id="streakLockNote" class="text-[11px] text-amber-300/90 hidden">
+          🔒 Unlocks automatically after your 1st completed withdrawal (50+ Coins).
+        </div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 space-y-1.5">
+        <div class="font-bold text-white">📌 Streak Rules</div>
+        <ul class="list-disc pl-4 space-y-1 text-[11px] text-slate-400">
+          <li>Unlocks once your first withdrawal (minimum 50 Coins) is marked Paid.</li>
+          <li>Tap <strong class="text-slate-200">Check In Today</strong> once per calendar day.</li>
+          <li>Day 7 automatically credits <strong class="text-amber-400">+10 Coins</strong> to your wallet and starts a fresh week.</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- TAB 4: WALLET -->
     <section id="tab-wallet" class="hidden space-y-4">
       <div class="bg-gradient-to-br from-[#171e2e] to-[#111520] border border-amber-500/30 rounded-2xl p-4">
@@ -328,24 +360,6 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
           <div class="text-lg font-display font-bold text-emerald-400" id="statSpent">0</div>
           <div class="text-[10px] text-slate-400 uppercase">Spent</div>
-        </div>
-      </div>
-
-      <!-- Daily Check-In Streak (10 Coins Weekly after 1st Withdrawal) -->
-      <div class="bg-gradient-to-br from-[#161b28] to-[#111520] border border-amber-500/30 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-xs font-bold text-white flex items-center gap-1.5">🔥 Daily Check-In Streak</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">Complete 7 days to earn <span class="text-amber-400 font-bold">+10 Coins</span> every week</div>
-          </div>
-          <span id="streakBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">0 / 7 Days</span>
-        </div>
-        <div id="streakDaysGrid" class="grid grid-cols-7 gap-1.5"></div>
-        <button id="claimStreakBtn" onclick="claimDailyCheckIn()" class="w-full py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
-          Check In Today
-        </button>
-        <div id="streakLockNote" class="text-[11px] text-amber-300/90 hidden">
-          🔒 Unlocks automatically after your 1st completed withdrawal (50+ Coins).
         </div>
       </div>
 
@@ -420,7 +434,7 @@
 
   <!-- Bottom Navigation -->
   <nav class="fixed bottom-0 inset-x-0 z-30 bg-[#0d1017]/95 backdrop-blur-md border-t border-slate-800/90 px-2 py-2">
-    <div class="max-w-xl mx-auto grid grid-cols-5 gap-1 text-[10px] font-semibold">
+    <div class="max-w-xl mx-auto grid grid-cols-6 gap-0.5 text-[10px] font-semibold">
       <button onclick="switchTab('rooms')" id="nav-rooms" class="flex flex-col items-center gap-0.5 py-1 text-orange-500">
         <span class="text-lg">🎮</span><span>Rooms</span>
       </button>
@@ -429,6 +443,9 @@
       </button>
       <button onclick="switchTab('ranks')" id="nav-ranks" class="flex flex-col items-center gap-0.5 py-1 text-slate-400">
         <span class="text-lg">🏆</span><span>Ranks</span>
+      </button>
+      <button onclick="switchTab('streak')" id="nav-streak" class="flex flex-col items-center gap-0.5 py-1 text-slate-400">
+        <span class="text-lg">🔥</span><span>Streak</span>
       </button>
       <button onclick="switchTab('wallet')" id="nav-wallet" class="flex flex-col items-center gap-0.5 py-1 text-slate-400">
         <span class="text-lg">🪙</span><span>Wallet</span>
@@ -832,7 +849,7 @@
     window.switchTab = (tab) => {
       sfxTap();
       state.activeTab = tab;
-      ['rooms', 'matches', 'ranks', 'wallet', 'profile'].forEach(t => {
+      ['rooms', 'matches', 'ranks', 'streak', 'wallet', 'profile'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
         const nav = document.getElementById(`nav-${t}`);
         nav.classList.toggle('text-orange-500', t === tab);
@@ -840,6 +857,7 @@
       });
       if (tab === 'matches') renderMyMatches();
       if (tab === 'ranks') renderLeaderboard();
+      if (tab === 'streak') renderProfile();
       if (tab === 'wallet') renderWallet();
       if (tab === 'profile') renderProfile();
     };
@@ -953,7 +971,7 @@
           state.userDoc = docSnap.exists() ? docSnap.data() : null;
           updateAuthUI();
           if (state.activeTab === 'wallet') renderWallet();
-          if (state.activeTab === 'profile') renderProfile();
+          if (state.activeTab === 'profile' || state.activeTab === 'streak') renderProfile();
         });
         // Listen to user's own deposits & disputes
         onSnapshot(query(collection(db, 'deposits')), (s) => {
