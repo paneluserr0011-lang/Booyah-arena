@@ -405,8 +405,9 @@
       </div>
 
       <!-- Admin Portal Button (Visible ONLY to verified 7341vaibhavtyagi@gmail.com) -->
-      <button id="adminPortalEntryBtn" onclick="openAdminPortal()" class="hidden w-full bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-xs py-3 rounded-2xl shadow-lg shadow-red-600/20">
-        🛡️ Admin Portal (Owner Only)
+      <button id="adminPortalEntryBtn" onclick="openAdminPortal()" class="hidden w-full bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-xs py-3 px-4 rounded-2xl shadow-lg shadow-red-600/20 flex items-center justify-center gap-2">
+        <span>🛡️ Admin Portal (Owner Only)</span>
+        <span id="adminBtnBadge" class="hidden bg-white text-red-600 text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse">0</span>
       </button>
 
       <!-- Info & Legal Links -->
@@ -447,7 +448,8 @@
       <button onclick="switchTab('wallet')" id="nav-wallet" class="flex flex-col items-center gap-0.5 py-1 text-slate-400">
         <span class="text-lg">🪙</span><span>Wallet</span>
       </button>
-      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-0.5 py-1 text-slate-400">
+      <button onclick="switchTab('profile')" id="nav-profile" class="relative flex flex-col items-center gap-0.5 py-1 text-slate-400">
+        <span id="navAdminDot" class="hidden absolute top-0.5 right-3 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-[#0d1017] animate-pulse"></span>
         <span class="text-lg">👤</span><span>Profile</span>
       </button>
     </div>
@@ -671,11 +673,11 @@
 
       <!-- Admin Sub-Tabs -->
       <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-bold">
-        <button onclick="setAdminTab('rooms')" id="admTab-rooms" class="px-3 py-1.5 rounded-xl bg-orange-600 text-white shrink-0">Rooms</button>
-        <button onclick="setAdminTab('deposits')" id="admTab-deposits" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Deposits</button>
-        <button onclick="setAdminTab('withdrawals')" id="admTab-withdrawals" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Withdrawals</button>
-        <button onclick="setAdminTab('disputes')" id="admTab-disputes" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Disputes</button>
-        <button onclick="setAdminTab('players')" id="admTab-players" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Players</button>
+        <button onclick="setAdminTab('rooms')" id="admTab-rooms" class="px-3 py-1.5 rounded-xl bg-orange-600 text-white shrink-0 flex items-center gap-1">Rooms <span id="admBadge-rooms" class="hidden bg-red-500 text-white text-[9px] px-1.5 rounded-full">0</span></button>
+        <button onclick="setAdminTab('deposits')" id="admTab-deposits" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0 flex items-center gap-1">Deposits <span id="admBadge-deposits" class="hidden bg-red-500 text-white text-[9px] px-1.5 rounded-full">0</span></button>
+        <button onclick="setAdminTab('withdrawals')" id="admTab-withdrawals" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0 flex items-center gap-1">Withdrawals <span id="admBadge-withdrawals" class="hidden bg-red-500 text-white text-[9px] px-1.5 rounded-full">0</span></button>
+        <button onclick="setAdminTab('disputes')" id="admTab-disputes" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0 flex items-center gap-1">Disputes <span id="admBadge-disputes" class="hidden bg-red-500 text-white text-[9px] px-1.5 rounded-full">0</span></button>
+        <button onclick="setAdminTab('players')" id="admTab-players" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0 flex items-center gap-1">Players <span id="admBadge-players" class="hidden w-2 h-2 bg-red-500 rounded-full"></span></button>
         <button onclick="setAdminTab('settings')" id="admTab-settings" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Settings</button>
       </div>
 
@@ -923,6 +925,7 @@
       }
       renderRooms();
       if (state.activeTab === 'matches') renderMyMatches();
+      updateAdminBadges();
       if (isAdminUser() && !document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
     });
 
@@ -991,16 +994,19 @@
           const list = s.docs.map(d => ({ id: d.id, ...d.data() }));
           state.deposits = isAdminUser() ? list : list.filter(x => x.userUid === u.uid);
           if (state.activeTab === 'wallet') renderWallet();
-          if (isAdminUser() && !document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
+          updateAdminBadges();
+      if (isAdminUser() && !document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
         });
         onSnapshot(query(collection(db, 'disputes')), (s) => {
           const list = s.docs.map(d => ({ id: d.id, ...d.data() }));
           state.disputes = isAdminUser() ? list : list.filter(x => x.userUid === u.uid);
-          if (isAdminUser() && !document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
+          updateAdminBadges();
+      if (isAdminUser() && !document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
         });
         if (isAdminUser()) {
           onSnapshot(query(collection(db, 'users')), (s) => {
             state.usersList = s.docs.map(d => ({ id: d.id, ...d.data() }));
+            updateAdminBadges();
             if (!document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
           });
         }
@@ -1026,6 +1032,7 @@
         hb.onclick = () => openAuthModal();
       }
       adminBtn.classList.toggle('hidden', !isAdminUser());
+      updateAdminBadges();
     }
 
     // --- AUTH FLOW ---
@@ -1846,6 +1853,46 @@
     };
 
     // --- ADMIN PORTAL ---
+    function updateAdminBadges() {
+      if (!isAdminUser()) {
+        document.getElementById('navAdminDot')?.classList.add('hidden');
+        document.getElementById('adminBtnBadge')?.classList.add('hidden');
+        return;
+      }
+      const pendDeps = state.deposits.filter(d => d.status === 'Pending').length;
+      const pendWds = state.withdrawals.filter(w => w.status === 'Pending').length;
+      const openDisp = state.disputes.filter(dp => dp.status === 'Open').length;
+      const needCredsRooms = state.tournaments.filter(r => r.status !== 'Completed' && (r.participants || []).length > 0 && (!r.roomCredsId || !r.roomCredsPass)).length;
+
+      let seenPlayers = 0;
+      try { seenPlayers = Number(localStorage.getItem('ba_adm_seen_players') || 0); } catch (e) {}
+      const curPlayers = state.usersList.filter(u => u.email !== ADMIN_EMAIL).length;
+      const hasNewPlayer = curPlayers > seenPlayers;
+
+      const totalAlerts = pendDeps + pendWds + openDisp + needCredsRooms + (hasNewPlayer ? 1 : 0);
+
+      const navDot = document.getElementById('navAdminDot');
+      const btnBadge = document.getElementById('adminBtnBadge');
+      if (navDot) navDot.classList.toggle('hidden', totalAlerts === 0);
+      if (btnBadge) {
+        btnBadge.textContent = `${totalAlerts} New`;
+        btnBadge.classList.toggle('hidden', totalAlerts === 0);
+      }
+
+      const setB = (id, count) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = count;
+        el.classList.toggle('hidden', count === 0);
+      };
+      setB('admBadge-rooms', needCredsRooms);
+      setB('admBadge-deposits', pendDeps);
+      setB('admBadge-withdrawals', pendWds);
+      setB('admBadge-disputes', openDisp);
+      const pDot = document.getElementById('admBadge-players');
+      if (pDot) pDot.classList.toggle('hidden', !hasNewPlayer);
+    }
+
     window.openAdminPortal = () => {
       if (!isAdminUser()) return showToast('Owner access only', 'error');
       sfxTap();
@@ -1856,6 +1903,11 @@
     window.setAdminTab = (t) => {
       sfxTap();
       state.adminTab = t;
+      if (t === 'players') {
+        const curPlayers = state.usersList.filter(u => u.email !== ADMIN_EMAIL).length;
+        try { localStorage.setItem('ba_adm_seen_players', String(curPlayers)); } catch (e) {}
+        updateAdminBadges();
+      }
       ['rooms', 'deposits', 'withdrawals', 'disputes', 'players', 'settings'].forEach(k => {
         document.getElementById(`admTab-${k}`).className = k === t ? 'px-3 py-1.5 rounded-xl bg-orange-600 text-white shrink-0' : 'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0';
       });
