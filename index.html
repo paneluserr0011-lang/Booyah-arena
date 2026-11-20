@@ -260,9 +260,12 @@
 
     <!-- TAB 3: RANKS -->
     <section id="tab-ranks" class="hidden space-y-3">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2">
         <h2 class="font-display text-xl font-bold text-white uppercase">Leaderboard</h2>
-        <span class="text-[11px] text-amber-400 font-semibold">Top Coin Winners</span>
+        <div class="flex bg-slate-900 border border-slate-800 rounded-xl p-1 text-[11px] font-bold">
+          <button onclick="setRankPeriod('weekly')" id="rankTab-weekly" class="px-3 py-1 rounded-lg bg-orange-600 text-white">📅 This Week</button>
+          <button onclick="setRankPeriod('alltime')" id="rankTab-alltime" class="px-3 py-1 rounded-lg text-slate-400">🏆 All-Time</button>
+        </div>
       </div>
       <div id="leaderboardContainer" class="space-y-2"></div>
     </section>
@@ -314,15 +317,6 @@
           <button onclick="openWithdrawModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs py-2.5 rounded-xl transition">
             Withdraw Coins
           </button>
-        </div>
-      </div>
-
-      <!-- Promo Code Redemption -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2">
-        <div class="text-xs font-bold text-white flex items-center gap-1.5">🎟️ Redeem Promo / Giveaway Code</div>
-        <div class="flex gap-2">
-          <input id="promoCodeInput" type="text" placeholder="Enter code (e.g. BOOYAH10)" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-orange-500" />
-          <button onclick="redeemPromoCode()" class="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-xl">Apply</button>
         </div>
       </div>
 
@@ -639,6 +633,21 @@
     </div>
   </div>
 
+  <!-- SHAREABLE WINNER CARD MODAL -->
+  <div id="winnerCardModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121620] border border-amber-500/40 rounded-2xl w-full max-w-md p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="font-display text-xl font-bold text-amber-400 uppercase">🏆 Booyah Winner Card</h3>
+        <button onclick="closeModal('winnerCardModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <canvas id="winnerCanvas" width="800" height="460" class="w-full h-auto rounded-xl border border-slate-800 bg-[#090b10]"></canvas>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="downloadWinnerCard()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-2.5 rounded-xl">⬇️ Download PNG</button>
+        <button onclick="shareWinnerCard()" class="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs py-2.5 rounded-xl">📤 Share Card</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ADMIN PORTAL MODAL -->
   <div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-2">
     <div class="bg-[#121620] border border-slate-800 rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-4 space-y-4">
@@ -664,7 +673,6 @@
         <button onclick="setAdminTab('deposits')" id="admTab-deposits" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Deposits</button>
         <button onclick="setAdminTab('withdrawals')" id="admTab-withdrawals" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Withdrawals</button>
         <button onclick="setAdminTab('disputes')" id="admTab-disputes" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Disputes</button>
-        <button onclick="setAdminTab('promos')" id="admTab-promos" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Promos</button>
         <button onclick="setAdminTab('players')" id="admTab-players" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Players</button>
         <button onclick="setAdminTab('settings')" id="admTab-settings" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0">Settings</button>
       </div>
@@ -710,11 +718,11 @@
       activeCategory: null,
       activeSubMode: 'All',
       activeStatus: 'Upcoming',
+      rankPeriod: 'weekly',
       tournaments: [],
       deposits: [],
       withdrawals: [],
       disputes: [],
-      promos: [],
       usersList: [],
       leaderboard: [],
       appSettings: {
@@ -990,10 +998,6 @@
             state.usersList = s.docs.map(d => ({ id: d.id, ...d.data() }));
             if (!document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
           });
-          onSnapshot(query(collection(db, 'promos')), (s) => {
-            state.promos = s.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (!document.getElementById('adminModal').classList.contains('hidden')) renderAdminTab();
-          });
         }
       } else {
         state.userDoc = null;
@@ -1226,6 +1230,15 @@
               <div><div class="text-slate-400 text-[10px]">PER KILL</div><div class="font-bold text-white">🪙 ${r.perKill || 0}</div></div>
               <div><div class="text-slate-400 text-[10px]">SLOTS</div><div class="font-bold text-white">${filled} / ${max}</div></div>
             </div>
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] font-semibold">
+                <span class="text-slate-400">${filled} / ${max} Joined</span>
+                <span class="${isFull ? 'text-red-400' : (max - filled <= 2 ? 'text-amber-400 animate-pulse' : 'text-emerald-400')}">${isFull ? '🔒 Room Full' : (max - filled <= 2 ? `🔥 Only ${max - filled} Spot${max - filled > 1 ? 's' : ''} Left!` : `🟢 ${max - filled} Spots Open`)}</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div class="h-full transition-all duration-300 ${isFull ? 'bg-red-500' : 'bg-gradient-to-r from-orange-500 to-amber-400'}" style="width: ${Math.min(100, Math.round((filled / max) * 100))}%"></div>
+              </div>
+            </div>
             ${r.status === 'Completed'
               ? `<button onclick="openMatchDetails('${r.id}')" class="w-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs py-2.5 rounded-xl">🏆 View Winners &amp; Kills</button>`
               : joined
@@ -1390,6 +1403,7 @@
           <div>No hacks/mods/glitches/emulators. Sit in your exact app slot (${me ? me.slot : 'assigned slot'}). Host decision is final.</div>
         </div>
 
+        ${(r.status === 'Completed' && me && (me.prizeCredited || 0) > 0) ? `<button onclick="openWinnerCard('${r.id}')" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-bold py-2.5 rounded-xl">🏆 Generate Shareable Winner Card</button>` : ''}
         ${me ? `<button onclick="openDisputeModal('${r.id}')" class="w-full bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 font-bold py-2.5 rounded-xl">⚠️ Report Result / Hacker / Dispute</button>` : ''}
       `;
       document.getElementById('matchDetailsModal').classList.remove('hidden');
@@ -1443,25 +1457,144 @@
       }
     };
 
-    // --- LEADERBOARD ---
+    // --- LEADERBOARD (WEEKLY VS ALL-TIME) ---
+    function getCurrentWeekKey() {
+      const d = new Date();
+      const start = new Date(d.getFullYear(), 0, 1);
+      const days = Math.floor((d - start) / 86400000);
+      const wk = Math.ceil((days + start.getDay() + 1) / 7);
+      return `${d.getFullYear()}-W${String(wk).padStart(2, '0')}`;
+    }
+
+    window.setRankPeriod = (period) => {
+      sfxTap();
+      state.rankPeriod = period;
+      document.getElementById('rankTab-weekly').className = period === 'weekly' ? 'px-3 py-1 rounded-lg bg-orange-600 text-white' : 'px-3 py-1 rounded-lg text-slate-400';
+      document.getElementById('rankTab-alltime').className = period === 'alltime' ? 'px-3 py-1 rounded-lg bg-orange-600 text-white' : 'px-3 py-1 rounded-lg text-slate-400';
+      renderLeaderboard();
+    };
+
     window.renderLeaderboard = () => {
       const box = document.getElementById('leaderboardContainer');
-      if (state.leaderboard.length === 0) {
-        box.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400">Leaderboard populates as matches complete.</div>`;
+      const curWk = getCurrentWeekKey();
+      const rows = state.leaderboard
+        .map(p => ({
+          ign: p.ign || p.name || 'Player',
+          kills: state.rankPeriod === 'weekly' ? (p.weekKey === curWk ? (p.weeklyKills || 0) : 0) : (p.kills || 0),
+          coins: state.rankPeriod === 'weekly' ? (p.weekKey === curWk ? (p.weeklyCoinsWon || 0) : 0) : (p.coinsWon || 0)
+        }))
+        .filter(p => state.rankPeriod === 'alltime' ? p.coins > 0 || p.kills > 0 : p.coins > 0 || p.kills > 0)
+        .sort((a, b) => b.coins - a.coins);
+
+      if (rows.length === 0) {
+        box.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400">${state.rankPeriod === 'weekly' ? 'No winners yet this week. Be the first!' : 'Leaderboard populates as matches complete.'}</div>`;
         return;
       }
-      box.innerHTML = state.leaderboard.map((p, idx) => `
+      box.innerHTML = rows.map((p, idx) => `
         <div class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="font-display text-lg font-bold ${idx < 3 ? 'text-amber-400' : 'text-slate-500'}">#${idx + 1}</span>
             <div>
-              <div class="text-xs font-bold text-white">${p.ign || p.name || 'Player'}</div>
-              <div class="text-[10px] text-slate-400">${p.kills || 0} Kills</div>
+              <div class="text-xs font-bold text-white">${p.ign}</div>
+              <div class="text-[10px] text-slate-400">${p.kills} Kills</div>
             </div>
           </div>
-          <div class="font-display text-base font-bold text-emerald-400">🪙 ${p.coinsWon || 0}</div>
+          <div class="font-display text-base font-bold text-emerald-400">🪙 ${p.coins}</div>
         </div>
       `).join('');
+    };
+
+    // --- SHAREABLE WINNER CARD ---
+    window.openWinnerCard = (roomId) => {
+      sfxCoin();
+      const r = state.tournaments.find(x => x.id === roomId);
+      const me = r && state.user ? (r.participants || []).find(p => p.uid === state.user.uid) : null;
+      if (!r || !me) return;
+      closeModal('matchDetailsModal');
+      document.getElementById('winnerCardModal').classList.remove('hidden');
+
+      const canvas = document.getElementById('winnerCanvas');
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 800, 460);
+      grad.addColorStop(0, '#090b10');
+      grad.addColorStop(0.5, '#171c2b');
+      grad.addColorStop(1, '#1f120b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 460);
+
+      ctx.strokeStyle = '#ff5722';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(16, 16, 768, 428);
+
+      ctx.fillStyle = '#ffb300';
+      ctx.font = 'bold 24px Rajdhani, sans-serif';
+      ctx.fillText('BOOYAH ARENA • OFFICIAL WINNER', 48, 72);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 54px Rajdhani, sans-serif';
+      ctx.fillText((me.ign || 'CHAMPION').toUpperCase(), 48, 150);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 22px Inter, sans-serif';
+      ctx.fillText(`${r.title} • ${r.category} (${r.subMode}) • ${me.slot}`, 48, 195);
+
+      // Stats Boxes
+      ctx.fillStyle = '#121620';
+      ctx.fillRect(48, 235, 320, 120);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(48, 235, 320, 120);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 18px Inter, sans-serif';
+      ctx.fillText('PRIZE WON', 72, 272);
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 44px Rajdhani, sans-serif';
+      ctx.fillText(`+${me.prizeCredited || 0} COINS`, 72, 328);
+
+      ctx.fillStyle = '#121620';
+      ctx.fillRect(392, 235, 360, 120);
+      ctx.strokeStyle = '#ffb300';
+      ctx.strokeRect(392, 235, 360, 120);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 18px Inter, sans-serif';
+      ctx.fillText('MATCH KILLS', 416, 272);
+      ctx.fillStyle = '#ffb300';
+      ctx.font = 'bold 44px Rajdhani, sans-serif';
+      ctx.fillText(`${me.kills || 0} KILLS`, 416, 328);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '500 18px Inter, sans-serif';
+      const refCode = state.userDoc?.referralCode || 'BA-ARENA';
+      ctx.fillText(`Join & Win Real Coins • Use Code: ${refCode} • BooyahArena.apk`, 48, 410);
+    };
+
+    window.downloadWinnerCard = () => {
+      sfxTap();
+      const canvas = document.getElementById('winnerCanvas');
+      const a = document.createElement('a');
+      a.download = 'BooyahArena_Winner.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      showToast('Winner Card downloaded!', 'success');
+    };
+
+    window.shareWinnerCard = async () => {
+      sfxTap();
+      const canvas = document.getElementById('winnerCanvas');
+      const link = state.appSettings.apkUrl || DEFAULT_CONFIG.apkUrl;
+      const code = state.userDoc?.referralCode || 'BA-ARENA';
+      const text = `🏆 Just won Coins on BooyahArena! Download APK: ${link} | Referral Code: ${code}`;
+      canvas.toBlob(async (blob) => {
+        if (navigator.share && blob) {
+          try {
+            const file = new File([blob], 'BooyahArena_Winner.png', { type: 'image/png' });
+            await navigator.share({ title: 'BooyahArena Winner', text, files: [file] });
+            return;
+          } catch (e) {}
+        }
+        downloadWinnerCard();
+        copyText(text);
+      });
     };
 
     // --- WALLET, UPI, WITHDRAWALS & PROMOS ---
@@ -1557,27 +1690,6 @@
         closeModal('withdrawModal');
         showToast('Withdrawal requested! Admin will pay via UPI.', 'success');
       } catch (e) { showToast(e.message, 'error'); }
-    };
-
-    window.redeemPromoCode = async () => {
-      sfxTap();
-      if (!state.user || !state.user.emailVerified) return openAuthModal();
-      const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
-      if (!code) return showToast('Enter a promo code', 'error');
-      try {
-        const promoSnap = await getDoc(doc(db, 'promos', code));
-        if (!promoSnap.exists()) return showToast('Invalid promo code', 'error');
-        const p = promoSnap.data();
-        const usedBy = p.usedBy || [];
-        if (usedBy.includes(state.user.uid)) return showToast('You already used this code', 'error');
-        if (usedBy.length >= (p.maxUses || 50)) return showToast('Promo code limit reached', 'error');
-
-        await updateDoc(doc(db, 'promos', code), { usedBy: [...usedBy, state.user.uid] });
-        await updateDoc(doc(db, 'users', state.user.uid), { balance: increment(p.coins || 10) });
-        document.getElementById('promoCodeInput').value = '';
-        sfxCoin();
-        showToast(`🎉 +${p.coins} Coins credited from ${code}!`, 'success');
-      } catch (e) { showToast(e.message || 'Promo error', 'error'); }
     };
 
     // --- PROFILE, DAILY STREAK & PLAYER BADGES ---
@@ -1739,7 +1851,7 @@
     window.setAdminTab = (t) => {
       sfxTap();
       state.adminTab = t;
-      ['rooms', 'deposits', 'withdrawals', 'disputes', 'promos', 'players', 'settings'].forEach(k => {
+      ['rooms', 'deposits', 'withdrawals', 'disputes', 'players', 'settings'].forEach(k => {
         document.getElementById(`admTab-${k}`).className = k === t ? 'px-3 py-1.5 rounded-xl bg-orange-600 text-white shrink-0' : 'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 shrink-0';
       });
       renderAdminTab();
@@ -1829,19 +1941,6 @@
             ${dp.status === 'Open' ? `<button onclick="admResolveDispute('${dp.id}')" class="bg-emerald-600 text-white font-bold px-3 py-1 rounded-lg">Mark Resolved</button>` : ''}
           </div>
         `).join('') || '<div class="text-slate-400">No disputes reported.</div>';
-      } else if (state.adminTab === 'promos') {
-        body.innerHTML = `
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
-            <div class="font-bold text-white">+ Create Promo Code</div>
-            <div class="grid grid-cols-3 gap-2">
-              <input id="admPromoCode" placeholder="CODE" class="bg-slate-900 border border-slate-800 rounded px-2 py-1.5 uppercase text-white" />
-              <input id="admPromoCoins" type="number" value="10" placeholder="Coins" class="bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-white" />
-              <input id="admPromoMax" type="number" value="50" placeholder="Max Uses" class="bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-white" />
-            </div>
-            <button onclick="admCreatePromo()" class="w-full bg-orange-600 text-white font-bold py-2 rounded-lg">Save Promo Code</button>
-          </div>
-          ${state.promos.map(p => `<div class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 flex justify-between"><strong>${p.id}</strong><span>+🪙${p.coins} • ${(p.usedBy || []).length}/${p.maxUses} used</span></div>`).join('')}
-        `;
       } else if (state.adminTab === 'players') {
         body.innerHTML = state.usersList.map(u => `
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
@@ -1913,7 +2012,18 @@
       await updateDoc(doc(db, 'tournaments', roomId), { participants: parts });
       if (diff !== 0) {
         await updateDoc(doc(db, 'users', p.uid), { balance: increment(diff) });
-        await setDoc(doc(db, 'leaderboard', p.uid), { ign: p.ign, kills: increment(kills), coinsWon: increment(diff) }, { merge: true });
+        const curWk = getCurrentWeekKey();
+        const lbRef = doc(db, 'leaderboard', p.uid);
+        const lbSnap = await getDoc(lbRef);
+        const sameWk = lbSnap.exists() && lbSnap.data().weekKey === curWk;
+        await setDoc(lbRef, {
+          ign: p.ign,
+          kills: increment(kills),
+          coinsWon: increment(diff),
+          weekKey: curWk,
+          weeklyKills: sameWk ? increment(kills) : kills,
+          weeklyCoinsWon: sameWk ? increment(diff) : diff
+        }, { merge: true });
       }
       showToast(`Credited ${p.ign}!`, 'success');
     };
@@ -1947,17 +2057,6 @@
     window.admResolveDispute = async (id) => {
       await updateDoc(doc(db, 'disputes', id), { status: 'Resolved' });
       showToast('Dispute resolved!', 'success');
-    };
-
-    window.admCreatePromo = async () => {
-      const code = document.getElementById('admPromoCode').value.trim().toUpperCase();
-      if (!code) return;
-      await setDoc(doc(db, 'promos', code), {
-        coins: Number(document.getElementById('admPromoCoins').value || 10),
-        maxUses: Number(document.getElementById('admPromoMax').value || 50),
-        usedBy: []
-      });
-      showToast(`Promo ${code} created!`, 'success');
     };
 
     window.admAddCoins = async (uid, amt) => {
