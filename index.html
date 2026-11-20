@@ -124,7 +124,7 @@
 
         <div class="flex items-center justify-between">
           <h3 class="font-gaming text-base font-bold uppercase tracking-wider text-slate-200">Choose Your Mode</h3>
-          <span class="text-[11px] text-slate-400">3 Categories</span>
+          <span class="text-[11px] text-slate-400">4 Categories</span>
         </div>
 
         <div id="categoryCards" class="flex flex-col gap-3">
@@ -159,6 +159,17 @@
               </div>
             </div>
             <span class="px-3 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-xs font-bold text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition">Enter &rarr;</span>
+          </button>
+
+          <button data-cat="Craftland" class="cat-card group w-full rounded-2xl p-4 border border-slate-800/90 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-purple-950/25 hover:border-purple-500/70 flex items-center justify-between transition active:scale-[0.99]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-600/20 border border-purple-500/40 flex items-center justify-center text-2xl">&#127919;</div>
+              <div class="text-left">
+                <p class="font-gaming text-lg font-bold tracking-wide text-white uppercase">Craftland</p>
+                <p class="text-xs text-slate-400">1v1 &bull; 2v2 &bull; 3v3 &bull; Headshot Only</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 rounded-lg bg-purple-500/15 border border-purple-500/30 text-xs font-bold text-purple-300 group-hover:bg-purple-500 group-hover:text-white transition">Enter &rarr;</span>
           </button>
         </div>
       </div>
@@ -437,6 +448,9 @@
                 <option value="BR Solo">BR Solo</option>
                 <option value="BR Duo">BR Duo</option>
                 <option value="BR Squad">BR Squad</option>
+                <option value="Craftland 1v1">Craftland 1v1 (Headshot Only)</option>
+                <option value="Craftland 2v2">Craftland 2v2 (Headshot Only)</option>
+                <option value="Craftland 3v3">Craftland 3v3 (Headshot Only)</option>
               </select>
             </div>
             <div>
@@ -649,11 +663,17 @@
           <li><strong>Mobile Players Only:</strong> Emulators / PC players are strictly banned from all rooms.</li>
           <li><strong>No Teaming:</strong> Teaming with opponents in Solo/Duo = disqualification.</li>
           <li><strong>No Cancellations:</strong> Entry fee is final with zero refunds once joined.</li>
+          <li><strong>Host-Controlled Teams:</strong> Players cannot form teams of their own choice; final team &amp; slot placement is controlled by the Host only.</li>
           <li><strong>Owner Rights:</strong> App owner may modify any rule or policy at any time without prior notice.</li>
         </ul>
       </div>
 
       <form id="joinForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Select Empty Team / Slot</label>
+          <div id="slotPickerGrid" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1"></div>
+          <input id="selectedSlotInput" type="hidden" required />
+        </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Free Fire UID</label>
           <input id="inputUid" type="text" required placeholder="e.g. 1948275610" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
@@ -685,13 +705,15 @@
     const CATEGORY_MAP = {
       'Lone Wolf': ['Lone Wolf 1v1', 'Lone Wolf 2v2'],
       'CS': ['CS 1v1', 'CS 2v2', 'CS 4v4'],
-      'BR': ['BR Solo', 'BR Duo', 'BR Squad']
+      'BR': ['BR Solo', 'BR Duo', 'BR Squad'],
+      'Craftland': ['Craftland 1v1', 'Craftland 2v2', 'Craftland 3v3']
     };
 
     const CATEGORY_TITLES = {
       'Lone Wolf': 'Lone Wolf Rooms',
       'CS': 'Clash Squad Rooms',
-      'BR': 'Battle Royale Rooms'
+      'BR': 'Battle Royale Rooms',
+      'Craftland': 'Craftland Headshot Rooms'
     };
 
     const LEGAL_DOCS = {
@@ -719,7 +741,8 @@
           <p><strong>1. Zero-Tolerance Anti-Cheat:</strong> Any use of hacks, mod menus, panels, config files, scripts, or map glitches results in an immediate permanent ban and forfeiture of all prizes and Coins.</p>
           <p><strong>2. Room Discipline:</strong> Sharing Room IDs/Passwords, adding friends/outsiders, teaming, or playing on emulators/PC is strictly prohibited and results in a ban.</p>
           <p><strong>3. No Cancellations or Refunds:</strong> All tournament entries are final. Once Coins are deducted for a slot, no cancellations or refunds are issued.</p>
-          <p><strong>4. Rule Changes:</strong> The app owner may modify or enforce additional rules at any time without prior notice.</p>
+          <p><strong>4. Host-Controlled Teams:</strong> Players cannot form teams of their own choice; final team &amp; slot assignment is controlled by the Host only.</p>
+          <p><strong>5. Rule Changes:</strong> The app owner may modify or enforce additional rules at any time without prior notice.</p>
         `
       }
     };
@@ -802,6 +825,24 @@
         db = firebase.firestore();
       }
       return db;
+    }
+
+    let authListenerAttached = false;
+    function attachAuthObserver() {
+      if (authListenerAttached || typeof firebase === 'undefined') return;
+      initFirebaseServices();
+      if (!firebase.apps.length) return;
+      authListenerAttached = true;
+      firebase.auth().onAuthStateChanged(u => {
+        if (u && (!state.user || state.user.uid !== u.uid)) {
+          state.user = { uid: u.uid, name: u.displayName || 'Player', email: u.email || '' };
+          unsubUserDoc = null;
+          saveState();
+          attachAuthObserver();
+    startFirestoreListeners();
+          renderAll();
+        }
+      });
     }
 
     function startFirestoreListeners() {
@@ -1203,7 +1244,7 @@
               <div>
                 <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wide">${t.mode} &bull; ${t.rule} &bull; Bermuda</span>
                 <h3 class="text-sm font-bold text-white mt-0.5">${t.title}</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Player: <span class="text-slate-200 font-medium">${j.ign}</span> (UID: ${j.uid})</p>
+                <p class="text-xs text-slate-400 mt-0.5">Player: <span class="text-slate-200 font-medium">${j.ign}</span> (UID: ${j.uid}) ${j.slot ? '&bull; <strong class="text-orange-400">' + j.slot + '</strong>' : ''}</p>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">${t.status}</span>
             </div>
@@ -1298,7 +1339,7 @@
               ${participants.length === 0 ? '<p class="text-[11px] text-slate-500">No players joined yet.</p>' : participants.map((p, idx) => `
                 <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 space-y-1.5">
                   <div class="flex justify-between text-[11px]">
-                    <span class="font-bold text-white">${p.ign} <span class="text-slate-400 font-normal">(UID: ${p.ffUid})</span></span>
+                    <span class="font-bold text-white">${p.slot ? '[' + p.slot + '] ' : ''}${p.ign} <span class="text-slate-400 font-normal">(UID: ${p.ffUid})</span></span>
                     <span class="text-emerald-400 font-bold">${p.paid ? 'Paid: ' + p.prizeWon + ' Coins' : ''}</span>
                   </div>
                   <div class="grid grid-cols-3 gap-1.5 items-center">
@@ -1419,6 +1460,39 @@
       }
     }
 
+
+    function getSlotsForTournament(t) {
+      const m = t.mode || '';
+      if (m.includes('1v1')) return ['Team 1 - A', 'Team 2 - A'];
+      if (m.includes('2v2')) return ['Team 1 - A', 'Team 1 - B', 'Team 2 - A', 'Team 2 - B'];
+      if (m.includes('3v3')) return ['Team 1 - A', 'Team 1 - B', 'Team 1 - C', 'Team 2 - A', 'Team 2 - B', 'Team 2 - C'];
+      if (m.includes('4v4')) return ['Team 1 - A', 'Team 1 - B', 'Team 1 - C', 'Team 1 - D', 'Team 2 - A', 'Team 2 - B', 'Team 2 - C', 'Team 2 - D'];
+      const total = Math.min(48, Math.max(2, Number(t.maxSlots) || 12));
+      return Array.from({ length: total }, (_, i) => 'Slot #' + (i + 1));
+    }
+
+    function renderSlotPicker(t) {
+      const grid = document.getElementById('slotPickerGrid');
+      const hiddenInput = document.getElementById('selectedSlotInput');
+      hiddenInput.value = '';
+      const slots = getSlotsForTournament(t);
+      const participants = Array.isArray(t.participants) ? t.participants : [];
+
+      grid.innerHTML = slots.map(slotName => {
+        const takenBy = participants.find(p => p.slot === slotName);
+        if (takenBy) {
+          return `<button type="button" disabled class="slot-btn px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-left opacity-60 cursor-not-allowed">
+            <p class="text-[10px] font-bold text-slate-500">${slotName}</p>
+            <p class="text-[11px] font-semibold text-slate-400 truncate">${takenBy.ign}</p>
+          </button>`;
+        }
+        return `<button type="button" data-slot="${slotName}" class="slot-btn px-2.5 py-2 rounded-xl bg-slate-950 hover:border-orange-500/70 border border-slate-700 text-left transition">
+          <p class="text-[10px] font-bold text-orange-400">${slotName}</p>
+          <p class="text-[11px] font-semibold text-emerald-400">Empty &bull; Tap</p>
+        </button>`;
+      }).join('');
+    }
+
     function renderAll() {
       renderCategoryView();
       renderAuth();
@@ -1489,6 +1563,8 @@
       try {
         initFirebaseServices();
         const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const result = await firebase.auth().signInWithPopup(provider);
         const u = result.user;
         state.user = { uid: u.uid, name: u.displayName || 'Player', email: u.email || '' };
@@ -1605,13 +1681,13 @@
     document.getElementById('hostForm').addEventListener('submit', e => {
       e.preventDefault();
       const mode = document.getElementById('hostMode').value;
-      const cat = mode.startsWith('Lone Wolf') ? 'Lone Wolf' : mode.startsWith('CS') ? 'CS' : 'BR';
+      const cat = mode.startsWith('Lone Wolf') ? 'Lone Wolf' : mode.startsWith('CS') ? 'CS' : mode.startsWith('Craftland') ? 'Craftland' : 'BR';
       const newT = {
         id: 't_' + Date.now(),
         title: document.getElementById('hostTitle').value.trim(),
         category: cat,
         mode,
-        rule: document.getElementById('hostRule').value,
+        rule: cat === 'Craftland' ? 'Headshot Only' : document.getElementById('hostRule').value,
         status: 'Upcoming',
         map: 'Bermuda',
         entryFee: Number(document.getElementById('hostEntry').value),
@@ -1894,6 +1970,7 @@
           <div class="flex justify-between"><span>Your Balance:</span><strong class="text-emerald-400">&#129689; ${state.balance} Coins</strong></div>
         `;
         document.getElementById('joinForm').reset();
+        renderSlotPicker(t);
         if (state.ffProfile) {
           document.getElementById('inputUid').value = state.ffProfile.uid || '';
           document.getElementById('inputIgn').value = state.ffProfile.ign || '';
@@ -1908,6 +1985,18 @@
 
     document.getElementById('closeJoinModal').addEventListener('click', () => {
       document.getElementById('joinModal').classList.add('hidden');
+    });
+
+    document.getElementById('slotPickerGrid').addEventListener('click', e => {
+      const btn = e.target.closest('[data-slot]');
+      if (!btn) return;
+      document.getElementById('selectedSlotInput').value = btn.dataset.slot;
+      document.querySelectorAll('#slotPickerGrid .slot-btn[data-slot]').forEach(b => {
+        b.classList.remove('border-orange-500', 'bg-orange-500/20');
+        b.classList.add('border-slate-700', 'bg-slate-950');
+      });
+      btn.classList.remove('border-slate-700', 'bg-slate-950');
+      btn.classList.add('border-orange-500', 'bg-orange-500/20');
     });
 
     document.getElementById('joinForm').addEventListener('submit', e => {
@@ -1925,6 +2014,16 @@
         switchTab('wallet');
         return;
       }
+      const chosenSlot = document.getElementById('selectedSlotInput').value.trim();
+      if (!chosenSlot) {
+        showToast('Please tap an empty team slot first!');
+        return;
+      }
+      if ((t.participants || []).some(p => p.slot === chosenSlot)) {
+        showToast('That slot was just taken! Pick another.');
+        renderSlotPicker(t);
+        return;
+      }
       const uid = document.getElementById('inputUid').value.trim();
       const ign = document.getElementById('inputIgn').value.trim();
 
@@ -1935,6 +2034,7 @@
       t.participants.push({
         userUid: state.user.uid,
         name: state.user.name,
+        slot: chosenSlot,
         ffUid: uid,
         ign,
         kills: 0,
@@ -1942,7 +2042,7 @@
         paid: false
       });
 
-      state.joined.unshift({ tournamentId: t.id, uid, ign });
+      state.joined.unshift({ tournamentId: t.id, slot: chosenSlot, uid, ign });
       state.transactions.unshift({
         id: 'tx_' + Date.now(),
         label: 'Joined: ' + t.title,
