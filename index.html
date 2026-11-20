@@ -586,11 +586,28 @@
       </div>
 
       <div id="authSignedOutView" class="space-y-3">
-        <p class="text-xs text-slate-400">Sign in with your Google Account to join Bermuda tournaments, save your Coins, and withdraw winnings.</p>
-        <button id="firebaseGoogleBtn" class="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-sm font-bold flex items-center justify-center gap-2 transition active:scale-95">
+        <button id="firebaseGoogleBtn" class="w-full py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-sm font-bold flex items-center justify-center gap-2 transition active:scale-95">
           <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
           Sign in with Google
         </button>
+
+        <div class="relative flex items-center py-0.5">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="px-2 text-[11px] text-slate-500">or Email &amp; Password</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <form id="emailAuthForm" class="space-y-2.5">
+          <input id="emailAuthName" type="text" placeholder="Your Name (for new account)" class="hidden w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+          <input id="emailAuthEmail" type="email" required placeholder="Email address" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+          <input id="emailAuthPass" type="password" required minlength="6" placeholder="Password (min 6 characters)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+          <button id="emailAuthSubmitBtn" type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:brightness-110 text-xs font-bold text-white transition active:scale-95">
+            Sign In with Email
+          </button>
+          <button id="toggleAuthModeBtn" type="button" class="w-full text-[11px] font-semibold text-orange-400 hover:underline pt-0.5">
+            New player? Create an Account
+          </button>
+        </form>
       </div>
 
       <div id="authSignedInView" class="hidden space-y-3">
@@ -1666,6 +1683,54 @@
         showToast('Signed in with Google: ' + state.user.name);
       } catch (err) {
         showToast('Google Sign-In error: ' + (err.message || 'Please try again'));
+      }
+    });
+
+    let isSignUpMode = false;
+    document.getElementById('toggleAuthModeBtn').addEventListener('click', () => {
+      isSignUpMode = !isSignUpMode;
+      const nameEl = document.getElementById('emailAuthName');
+      const submitBtn = document.getElementById('emailAuthSubmitBtn');
+      const toggleBtn = document.getElementById('toggleAuthModeBtn');
+      if (isSignUpMode) {
+        nameEl.classList.remove('hidden');
+        nameEl.required = true;
+        submitBtn.textContent = 'Create Account';
+        toggleBtn.textContent = 'Already have an account? Sign In';
+      } else {
+        nameEl.classList.add('hidden');
+        nameEl.required = false;
+        submitBtn.textContent = 'Sign In with Email';
+        toggleBtn.textContent = 'New player? Create an Account';
+      }
+    });
+
+    document.getElementById('emailAuthForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('emailAuthEmail').value.trim();
+      const pass = document.getElementById('emailAuthPass').value;
+      const name = document.getElementById('emailAuthName').value.trim();
+      try {
+        initFirebaseServices();
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        let cred;
+        if (isSignUpMode) {
+          cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+          if (name) await cred.user.updateProfile({ displayName: name });
+        } else {
+          cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+        }
+        const u = cred.user;
+        state.user = { uid: u.uid, name: u.displayName || name || email.split('@')[0], email: u.email || email };
+        unsubUserDoc = null;
+        startFirestoreListeners();
+        saveState();
+        document.getElementById('emailAuthForm').reset();
+        document.getElementById('authModal').classList.add('hidden');
+        renderAll();
+        showToast((isSignUpMode ? 'Account created: ' : 'Signed in: ') + state.user.name);
+      } catch (err) {
+        showToast(err.message || 'Authentication failed');
       }
     });
 
