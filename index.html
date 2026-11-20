@@ -1868,39 +1868,75 @@
       const body = document.getElementById('adminTabBody');
       if (state.adminTab === 'rooms') {
         body.innerHTML = `
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5">
             <div class="font-bold text-white">+ Create Custom Room</div>
-            <input id="admRoomTitle" type="text" placeholder="Room Title (e.g. Bermuda Pro 2v2)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white" />
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Room Title</label>
+              <input id="admRoomTitle" type="text" placeholder="e.g. Bermuda Pro 2v2" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white" />
+            </div>
             <div class="grid grid-cols-2 gap-2">
-              <select id="admRoomCat" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
-                <option value="Lone Wolf">Lone Wolf</option>
-                <option value="Clash Squad">Clash Squad</option>
-                <option value="Battle Royale">Battle Royale</option>
-                <option value="Craftland">Craftland</option>
-              </select>
-              <select id="admRoomSub" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
-                <option value="1v1">1v1</option><option value="2v2">2v2</option><option value="3v3">3v3</option><option value="4v4">4v4</option>
-                <option value="Solo">Solo</option><option value="Duo">Duo</option><option value="Squad">Squad</option>
-              </select>
-              <select id="admRoomRule" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
-                <option value="Headshot Only">Headshot Only</option>
-                <option value="Body + Headshot">Body + Headshot</option>
-              </select>
-              <input id="admRoomMax" type="number" value="4" placeholder="Max Slots" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
-              <input id="admRoomEntry" type="number" value="10" placeholder="Entry Coins" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
-              <input id="admRoomPrize" type="number" value="50" placeholder="Prize Pool" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
-              <input id="admRoomKill" type="number" value="5" placeholder="Per Kill" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
-              <input id="admRoomDate" type="date" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
-              <input id="admRoomTime" type="time" class="col-span-2 bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Category</label>
+                <select id="admRoomCat" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
+                  <option value="Lone Wolf">Lone Wolf</option>
+                  <option value="Clash Squad">Clash Squad</option>
+                  <option value="Battle Royale">Battle Royale</option>
+                  <option value="Craftland">Craftland</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Sub-Mode</label>
+                <select id="admRoomSub" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
+                  <option value="1v1">1v1</option><option value="2v2">2v2</option><option value="3v3">3v3</option><option value="4v4">4v4</option>
+                  <option value="Solo">Solo</option><option value="Duo">Duo</option><option value="Squad">Squad</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Room Rule Type</label>
+                <select id="admRoomRule" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white">
+                  <option value="Headshot Only">Headshot Only</option>
+                  <option value="Body + Headshot">Body + Headshot</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Max Player Slots</label>
+                <input id="admRoomMax" type="number" value="4" placeholder="e.g. 2, 4, 8, 48" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Entry Fee (Coins)</label>
+                <input id="admRoomEntry" type="number" value="10" placeholder="e.g. 10" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Total Prize Pool (Coins)</label>
+                <input id="admRoomPrize" type="number" value="50" placeholder="e.g. 50" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Per-Kill Bonus (Coins)</label>
+                <input id="admRoomKill" type="number" value="5" placeholder="e.g. 5" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Match Date</label>
+                <input id="admRoomDate" type="date" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-[10px] text-slate-400 mb-1">Match Start Time</label>
+                <input id="admRoomTime" type="time" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-white" />
+              </div>
             </div>
             <button onclick="admCreateRoom()" class="w-full bg-orange-600 text-white font-bold py-2 rounded-lg">Create Room</button>
           </div>
           <div class="space-y-2">${state.tournaments.map(r => `
             <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
-              <div class="flex justify-between font-bold text-white"><span>${r.title} (${r.subMode})</span><span class="text-orange-400">${r.status}</span></div>
+              <div class="flex justify-between items-center font-bold text-white gap-2">
+                <span class="truncate">${r.title} (${r.subMode})</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-orange-400">${r.status}</span>
+                  <button onclick="admDeleteRoom('${r.id}', this)" class="bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white px-2 py-0.5 rounded text-[10px]">🗑️ Delete</button>
+                </div>
+              </div>
               <div class="grid grid-cols-2 gap-1.5">
-                <input id="cid-${r.id}" value="${r.roomCredsId || ''}" placeholder="Room ID" class="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white" />
-                <input id="cpass-${r.id}" value="${r.roomCredsPass || ''}" placeholder="Password" class="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white" />
+                <div><label class="block text-[9px] text-slate-400 mb-0.5">FF Room ID</label><input id="cid-${r.id}" value="${r.roomCredsId || ''}" placeholder="Enter Room ID" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white" /></div>
+                <div><label class="block text-[9px] text-slate-400 mb-0.5">FF Password</label><input id="cpass-${r.id}" value="${r.roomCredsPass || ''}" placeholder="Enter Password" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white" /></div>
               </div>
               <div class="flex gap-1.5">
                 <button onclick="admReleaseCreds('${r.id}')" class="flex-1 bg-emerald-600 text-white font-bold py-1.5 rounded-lg">Release ID/Pass</button>
@@ -1908,11 +1944,13 @@
                 <button onclick="admSetStatus('${r.id}','Completed')" class="bg-blue-600 text-white px-2.5 py-1.5 rounded-lg">Complete</button>
               </div>
               ${(r.participants || []).map((p, idx) => `
-                <div class="flex items-center justify-between gap-1 bg-slate-900 px-2 py-1 rounded">
+                <div class="flex items-center justify-between gap-1 bg-slate-900 px-2 py-1.5 rounded">
                   <span class="truncate">${p.ign} (${p.slot})</span>
                   <div class="flex items-center gap-1">
-                    <input id="pk-${r.id}-${idx}" type="number" placeholder="K" value="${p.kills || 0}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center" />
-                    <input id="pp-${r.id}-${idx}" type="number" placeholder="🪙" value="${p.prizeCredited || 0}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center" />
+                    <span class="text-[9px] text-slate-400">Kills:</span>
+                    <input id="pk-${r.id}-${idx}" type="number" placeholder="0" value="${p.kills || 0}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center" />
+                    <span class="text-[9px] text-slate-400">🪙:</span>
+                    <input id="pp-${r.id}-${idx}" type="number" placeholder="0" value="${p.prizeCredited || 0}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center" />
                     <button onclick="admCreditPlayer('${r.id}',${idx})" class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">Pay</button>
                   </div>
                 </div>
@@ -1944,15 +1982,18 @@
           </div>
         `).join('') || '<div class="text-slate-400">No disputes reported.</div>';
       } else if (state.adminTab === 'players') {
-        body.innerHTML = state.usersList.map(u => `
+        const playersOnly = state.usersList.filter(u => u.email !== ADMIN_EMAIL);
+        body.innerHTML = playersOnly.map(u => `
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
             <div class="min-w-0"><div class="font-bold text-white truncate">${u.name} (🪙${u.balance || 0})</div><div class="text-[10px] text-slate-400 truncate">${u.email}</div></div>
             <div class="flex gap-1 shrink-0">
               <button onclick="admAddCoins('${u.id}',10)" class="bg-emerald-600 text-white px-2 py-1 rounded">+10</button>
-              <button onclick="admToggleBlock('${u.id}',${!u.blocked})" class="${u.blocked ? 'bg-amber-600' : 'bg-red-600'} text-white px-2 py-1 rounded">${u.blocked ? 'Unblock' : 'Block'}</button>
+              <button onclick="admAddCoins('${u.id}',-10)" class="bg-slate-700 text-white px-2 py-1 rounded">-10</button>
+              <button onclick="admToggleBlock('${u.id}',${!u.blocked})" class="${u.blocked ? 'bg-amber-600' : 'bg-orange-600'} text-white px-2 py-1 rounded">${u.blocked ? 'Unblock' : 'Block'}</button>
+              <button onclick="admRemoveUser('${u.id}', this)" class="bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white px-2 py-1 rounded">🗑️</button>
             </div>
           </div>
-        `).join('');
+        `).join('') || '<div class="text-slate-400">No player accounts yet.</div>';
       } else if (state.adminTab === 'settings') {
         body.innerHTML = `
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5">
@@ -1996,6 +2037,19 @@
         roomCredsPass: document.getElementById(`cpass-${id}`).value.trim()
       });
       showToast('Room ID & Password released!', 'success');
+    };
+
+    window.admDeleteRoom = async (id, btn) => {
+      sfxTap();
+      if (btn.dataset.confirm !== '1') {
+        btn.dataset.confirm = '1';
+        btn.textContent = 'Confirm?';
+        btn.classList.add('bg-red-600', 'text-white');
+        setTimeout(() => { if (btn) { btn.dataset.confirm = ''; btn.textContent = '🗑️ Delete'; } }, 3500);
+        return;
+      }
+      await deleteDoc(doc(db, 'tournaments', id));
+      showToast('Room deleted!', 'info');
     };
 
     window.admSetStatus = async (id, status) => {
@@ -2064,6 +2118,19 @@
     window.admAddCoins = async (uid, amt) => {
       await updateDoc(doc(db, 'users', uid), { balance: increment(amt) });
       showToast(`+${amt} Coins added`, 'success');
+    };
+
+    window.admRemoveUser = async (uid, btn) => {
+      sfxTap();
+      if (btn.dataset.confirm !== '1') {
+        btn.dataset.confirm = '1';
+        btn.textContent = 'Confirm?';
+        btn.classList.add('bg-red-600', 'text-white');
+        setTimeout(() => { if (btn) { btn.dataset.confirm = ''; btn.textContent = '🗑️'; } }, 3500);
+        return;
+      }
+      await deleteDoc(doc(db, 'users', uid));
+      showToast('Player removed!', 'info');
     };
 
     window.admToggleBlock = async (uid, blocked) => {
