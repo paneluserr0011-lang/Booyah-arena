@@ -892,7 +892,7 @@
       if (!firebase.apps.length) return;
       authListenerAttached = true;
       firebase.auth().onAuthStateChanged(u => {
-        if (u && (!state.user || state.user.uid !== u.uid)) {
+        if (u && u.emailVerified && (!state.user || state.user.uid !== u.uid)) {
           state.user = { uid: u.uid, name: u.displayName || 'Player', email: u.email || '' };
           unsubUserDoc = null;
           saveState();
@@ -1717,8 +1717,20 @@
         if (isSignUpMode) {
           cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
           if (name) await cred.user.updateProfile({ displayName: name });
+          await cred.user.sendEmailVerification();
+          await firebase.auth().signOut();
+          document.getElementById('emailAuthForm').reset();
+          document.getElementById('toggleAuthModeBtn').click();
+          showToast('Verification link sent to ' + email + '! Check your inbox (and Spam), then Sign In.');
+          return;
         } else {
           cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+          if (!cred.user.emailVerified) {
+            await cred.user.sendEmailVerification().catch(() => {});
+            await firebase.auth().signOut();
+            showToast('Email not verified yet! Verification link re-sent to ' + email + '.');
+            return;
+          }
         }
         const u = cred.user;
         state.user = { uid: u.uid, name: u.displayName || name || email.split('@')[0], email: u.email || email };
@@ -1728,7 +1740,7 @@
         document.getElementById('emailAuthForm').reset();
         document.getElementById('authModal').classList.add('hidden');
         renderAll();
-        showToast((isSignUpMode ? 'Account created: ' : 'Signed in: ') + state.user.name);
+        showToast('Signed in: ' + state.user.name);
       } catch (err) {
         showToast(err.message || 'Authentication failed');
       }
