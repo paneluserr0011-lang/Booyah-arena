@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "BooyahArena.app",
+        "sha256_cert_fingerprints": ["2E:A3:CC:06:0F:A9:4D:90:F3:D1:B5:0F:3F:BA:68:4F:6B:B1:AC:E8:0D:62:AC:71:63:AD:40:12:85:8C:9F:3F"]
+      }
+    }]
